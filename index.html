@@ -54,22 +54,28 @@ body{
     overflow: hidden;
 }
 
-.note{
-    position:absolute;
-    width:110px;
-    min-height:90px;
-    padding:12px;
-    border-radius:12px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    font-size:16px;
-    font-weight:700;
-    line-height:1.4;
-    word-break:keep-all;
-    box-shadow:0 4px 12px rgba(0,0,0,0.12);
-    animation:pop .2s ease;
+.note {
+    position: absolute;
+    width: 110px;          /* 가로 크기는 110px로 고정 */
+    min-height: 90px;      /* 💡 height를 지우고 min-height만 남겨두어야 글이 길어질 때 아래로 늘어납니다! */
+    height: auto;          /* 💡 글자 수에 따라 세로가 자동으로 조절되도록 설정 */
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 14px;       /* 💡 긴 문장이 잘 들어가도록 글씨 크기를 16px -> 14px로 살짝 줄였습니다 */
+    font-weight: 700;
+    line-height: 1.4;
+    
+    /* 💡 [핵심] 한 줄로 길어지지 않고 단어/글자 단위로 자동 줄바꿈되게 만드는 마법의 속성들 */
+    white-space: normal;   
+    word-break: break-all; /* 영문이나 숫자가 길어져도 강제로 줄바꿈 해줍니다 */
+    overflow-wrap: break-word; 
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    animation: pop .2s ease;
 }
 
 @keyframes pop{
@@ -267,10 +273,10 @@ button{
         return bannedWords.some(word => lower.includes(word));
     }
 
-    function randomPosition(){
+function randomPosition(){
         return {
-            x: Math.random() * 250,
-            y: Math.random() * 400
+            x: Math.random() * (board.clientWidth - 140), // 보드 가로 폭에 맞춰 랜덤 배치
+            y: Math.random() * 50  // 💡 세로 생성 위치를 위쪽(0~50px 사이)으로 제한하여 아래로 늘어날 공간을 확보합니다.
         };
     }
 
