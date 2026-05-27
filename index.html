@@ -235,118 +235,107 @@ button{
 
 </div>
 
-<script>
+<script type="module">
+    // 2. 파이어베이스 라이브러리 가져오기
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-const board = document.getElementById('board');
-
-const warning = document.getElementById('warning');
-
-const colors = [
-    '#ffe5e5',
-    '#fff1b8',
-    '#dff7d8',
-    '#dcefff',
-    '#f1e2ff'
-];
-
-const bannedWords = [
-    '시발','씨발','병신',
-    '새끼','좆','fuck',
-    'shit','bitch','ㅅㅂ'
-];
-
-function containsBadWord(text){
-
-    const lower = text.toLowerCase();
-
-    return bannedWords.some(word =>
-        lower.includes(word)
-    );
-}
-
-function randomPosition(){
-
-    return {
-
-        x:Math.random() * 250,
-
-        y:Math.random() * 400
+    // 3. 파이어베이스 설정값 (현재 사용자님의 실제 설정값입니다)
+    const firebaseConfig = {
+        apiKey: "AIzaSyB91aq4eu4EMXRDZP4XaxZYrIS2rC7VONU",
+        authDomain: "sogam-f708f.firebaseapp.com",
+        projectId: "sogam-f708f",
+        storageBucket: "sogam-f708f.firebasestorage.app",
+        messagingSenderId: "347505571080",
+        appId: "1:347505571080:web:9b28f6716ab322da2728bd"
     };
-}
 
-function addMessage(){
+    // 4. 파이어베이스 및 데이터베이스(Firestore) 초기화
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    const input =
-        document.getElementById('messageInput');
+    // --- 기존에 작성하신 변수들 ---
+    const board = document.getElementById('board');
+    const warning = document.getElementById('warning');
+    const colors = ['#ffe5e5', '#fff1b8', '#dff7d8', '#dcefff', '#f1e2ff'];
+    const bannedWords = ['시발','씨발','병신','새끼','좆','fuck','shit','bitch','ㅅㅂ'];
 
-    const text =
-        input.value.trim();
-
-    warning.innerText = '';
-
-    if(!text){
-
-        warning.innerText =
-            '메시지를 입력해주세요.';
-
-        return;
+    // --- 기존에 작성하신 유틸 함수들 ---
+    function containsBadWord(text){
+        const lower = text.toLowerCase();
+        return bannedWords.some(word => lower.includes(word));
     }
 
-    if(containsBadWord(text)){
-
-        warning.innerText =
-            '부적절한 표현은 사용할 수 없습니다.';
-
-        return;
+    function randomPosition(){
+        return {
+            x: Math.random() * 250,
+            y: Math.random() * 400
+        };
     }
 
-    createNote(text);
+    // 5. [수정됨] 파이어베이스에 데이터를 저장하는 addMessage 함수
+    async function addMessage(){
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        warning.innerText = '';
 
-    input.value = '';
-}
+        if(!text){
+            warning.innerText = '메시지를 입력해주세요.';
+            return;
+        }
 
-function createNote(text){
+        if(containsBadWord(text)){
+            warning.innerText = '부적절한 표현은 사용할 수 없습니다.';
+            return;
+        }
 
-    const note =
-        document.createElement('div');
-
-    const pos =
-        randomPosition();
-
-    note.className = 'note';
-
-    note.innerText = text;
-
-    note.style.left =
-        pos.x + 'px';
-
-    note.style.top =
-        pos.y + 'px';
-
-    note.style.background =
-        colors[
-            Math.floor(
-                Math.random() * colors.length
-            )
-        ];
-
-    note.style.transform =
-        `rotate(${(Math.random()*10)-5}deg)`;
-
-    note.style.zIndex =
-        Date.now();
-
-    board.appendChild(note);
-}
-
-document.getElementById('messageInput')
-.addEventListener('keypress', function(e){
-
-    if(e.key === 'Enter'){
-
-        addMessage();
+        // 📝 기존의 createNote(text) 대신 파이어베이스 데이터베이스에 저장합니다.
+        try {
+            await addDoc(collection(db, "messages"), {
+                text: text,
+                createdAt: serverTimestamp() // 작성 시간 저장
+            });
+            input.value = ''; // 성공하면 입력창 비우기
+        } catch (error) {
+            console.error("데이터 저장 실패: ", error);
+            warning.innerText = '메시지 저장 중 오류가 발생했습니다.';
+        }
     }
-});
+
+    // --- 기존에 작성하신 노트 생성 함수 ---
+    function createNote(text){
+        const note = document.createElement('div');
+        const pos = randomPosition();
+
+        note.className = 'note';
+        note.innerText = text;
+        note.style.left = pos.x + 'px';
+        note.style.top = pos.y + 'px';
+        note.style.background = colors[Math.floor(Math.random() * colors.length)];
+        note.style.transform = `rotate(${(Math.random()*10)-5}deg)`;
+        note.style.zIndex = Date.now();
+
+        board.appendChild(note);
+    }
+
+    // 6. [추가됨] 데이터베이스에서 실시간으로 글을 읽어와 화면에 뿌려주는 코드
+    // 누군가 글을 쓰면 새로고침 안 해도 화면에 바로 나타납니다!
+    const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+    onSnapshot(q, (snapshot) => {
+        board.innerHTML = ''; // 중복으로 그려지는 것을 막기 위해 보드 청소
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            createNote(data.text); // 데이터베이스에 있는 텍스트로 노트 생성
+        });
+    });
+
+    // --- 기존에 작성하신 엔터키 이벤트 리스너 ---
+    document.getElementById('messageInput')
+    .addEventListener('keypress', function(e){
+        if(e.key === 'Enter'){
+            addMessage();
+        }
+    });
 
 </script>
 
