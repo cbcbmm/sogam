@@ -1,0 +1,404 @@
+﻿```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>6월, 호국보훈의 달</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#f7f3ee;
+    font-family:'Pretendard', sans-serif;
+    display:flex;
+    justify-content:center;
+    color:#3b2a1d;
+}
+
+.container{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    padding:24px 18px 40px;
+    box-sizing:border-box;
+}
+
+.title{
+    text-align:center;
+    margin-top:10px;
+}
+
+.title h1{
+    font-size:42px;
+    margin:0;
+    font-weight:800;
+}
+
+.title p{
+    color:#8f8a84;
+    margin-top:14px;
+    font-size:18px;
+}
+
+.board{
+    margin-top:28px;
+    background:#f8f5f1;
+    border:2px dashed #efc8aa;
+    border-radius:24px;
+    min-height:760px;
+    position:relative;
+    overflow:hidden;
+    padding:18px;
+    box-sizing:border-box;
+}
+
+.note{
+    position:absolute;
+    width:130px;
+    min-height:120px;
+    border-radius:10px;
+    padding:16px;
+    box-sizing:border-box;
+    font-size:24px;
+    font-weight:700;
+    line-height:1.4;
+    box-shadow:0 8px 18px rgba(0,0,0,0.12);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    word-break:keep-all;
+    animation:pop .25s ease;
+}
+
+@keyframes pop{
+    from{
+        transform:scale(0.5);
+        opacity:0;
+    }
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+.character{
+    margin-top:28px;
+    display:flex;
+    align-items:flex-end;
+    gap:12px;
+}
+
+.character img{
+    width:150px;
+}
+
+.speech{
+    background:white;
+    border:3px solid #222;
+    border-radius:999px;
+    padding:18px 22px;
+    font-size:20px;
+    line-height:1.6;
+    position:relative;
+    flex:1;
+}
+
+.speech:after{
+    content:'';
+    position:absolute;
+    left:-16px;
+    bottom:24px;
+    width:24px;
+    height:24px;
+    background:white;
+    border-left:3px solid #222;
+    border-bottom:3px solid #222;
+    transform:rotate(45deg);
+}
+
+.input-area{
+    margin-top:22px;
+    display:flex;
+    gap:10px;
+}
+
+input{
+    flex:1;
+    height:64px;
+    border-radius:999px;
+    border:2px solid #eadccc;
+    padding:0 24px;
+    font-size:20px;
+    background:white;
+}
+
+button{
+    width:120px;
+    border:none;
+    border-radius:999px;
+    background:#ff8d3b;
+    color:white;
+    font-size:22px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.warning{
+    color:#d63031;
+    margin-top:10px;
+    font-size:15px;
+    text-align:center;
+}
+
+.footer{
+    margin-top:22px;
+    text-align:center;
+    color:#a7a19c;
+    font-size:15px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="title">
+        <h1>6월, 호국보훈의 달</h1>
+        <p>소중한 한마디가 큰 힘이 됩니다!</p>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="character">
+
+        <!-- 캐릭터 이미지 파일명 -->
+        <img src="character.png">
+
+        <div class="speech">
+            행사 참여 소감과<br>
+            국가보훈대상자에 대한<br>
+            감사의 메시지를 남겨주세요!
+        </div>
+
+    </div>
+
+    <div class="input-area">
+
+        <input
+            type="text"
+            id="messageInput"
+            maxlength="40"
+            placeholder="따뜻한 메시지를 입력해 주세요 :)"
+        >
+
+        <button onclick="addMessage()">
+            등록하기
+        </button>
+
+    </div>
+
+    <div class="warning" id="warning"></div>
+
+    <div class="footer">
+        ♥ 모든 메시지는 소중히 관리됩니다. ♥
+    </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    limit
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* Firebase 설정 */
+
+const firebaseConfig = {
+
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "000000000",
+    appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const board = document.getElementById('board');
+const warning = document.getElementById('warning');
+
+/* 욕설 필터 */
+
+const bannedWords = [
+
+    "시발","씨발","병신","개새끼",
+    "좆","존나","fuck","shit",
+    "bitch","asshole"
+];
+
+function containsBadWord(text){
+
+    const lower = text.toLowerCase();
+
+    return bannedWords.some(word =>
+        lower.includes(word)
+    );
+}
+
+/* 색상 */
+
+const colors = [
+
+    '#ffe3e6',
+    '#fff2b9',
+    '#dff7c8',
+    '#dcefff',
+    '#f0e0ff',
+    '#ffeab8'
+];
+
+/* 메시지 랜덤 배치 */
+
+function randomPosition(){
+
+    const x = Math.random() * 230;
+    const y = Math.random() * 600;
+
+    return {x,y};
+}
+
+/* 최신 메시지가 위로 */
+
+const q = query(
+    collection(db, "messages"),
+    orderBy("createdAt", "desc"),
+    limit(60)
+);
+
+onSnapshot(q, (snapshot)=>{
+
+    board.innerHTML = '';
+
+    let z = 1;
+
+    snapshot.forEach((doc)=>{
+
+        const data = doc.data();
+
+        createNote(data, z);
+
+        z++;
+    });
+});
+
+function createNote(data, zIndex){
+
+    const note = document.createElement('div');
+
+    note.className = 'note';
+
+    note.innerText = data.text;
+
+    note.style.left = data.x + 'px';
+
+    note.style.top = data.y + 'px';
+
+    note.style.background =
+        data.color;
+
+    note.style.zIndex = zIndex;
+
+    note.style.transform =
+        `rotate(${data.rotate}deg)`;
+
+    board.appendChild(note);
+}
+
+window.addMessage = async function(){
+
+    const input =
+        document.getElementById('messageInput');
+
+    const text = input.value.trim();
+
+    warning.innerText = '';
+
+    if(!text){
+
+        warning.innerText =
+            '메시지를 입력해주세요.';
+
+        return;
+    }
+
+    if(containsBadWord(text)){
+
+        warning.innerText =
+            '부적절한 표현은 사용할 수 없습니다.';
+
+        return;
+    }
+
+    const pos = randomPosition();
+
+    const data = {
+
+        text:text,
+
+        x:pos.x,
+
+        y:pos.y,
+
+        color:
+            colors[
+                Math.floor(
+                    Math.random() * colors.length
+                )
+            ],
+
+        rotate:
+            (Math.random()*10)-5,
+
+        createdAt:Date.now()
+    };
+
+    await addDoc(
+        collection(db, "messages"),
+        data
+    );
+
+    input.value = '';
+}
+
+document.getElementById('messageInput')
+.addEventListener('keypress', function(e){
+
+    if(e.key === 'Enter'){
+
+        addMessage();
+    }
+});
+
+</script>
+
+</body>
+</html>
+```
