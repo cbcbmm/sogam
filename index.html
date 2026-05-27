@@ -19,32 +19,39 @@ body{
     color:#3a2b1f;
 }
 
-.container{
-    width:100%;
-    max-width:430px;
-    min-height:100vh;
-    padding:12px 14px 18px;
+.container {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    padding: 10px 14px 18px; /* ⬆️ 위쪽 여백을 12px에서 10px로 살짝 줄였습니다 */
 }
 
-.title{
-    text-align:center;
+.title {
+    text-align: center;
+    margin-bottom: 8px; /* ⬇️ 타이틀 전체와 아래 보드판 사이의 간격을 줄여줍니다 */
 }
 
-.title p{
-    margin-top:2px;
-    color:#000000;
-    font-size:14px;
+/* 6월, 호국보훈의 달 제목 자체의 여백도 확 줄여줍니다 */
+.title h1 {
+    margin: 0 0 2px 0; /* 아래 부제목과의 간격을 2px로 아주 좁게 설정 */
+    font-size: 24px;   /* 글씨 크기를 적당히 조절해 자리를 덜 차지하게 합니다 */
 }
 
-.board{
-    margin-top:16px;
-    width:100%;
-    height:34vh;
-    border-radius:24px;
-    border:2px dashed #f0c9aa;
-    background:#faf7f3;
-    position:relative;
-    overflow:hidden;
+.title p {
+    margin-top: 0;     /* ⬆️ 위쪽 여백을 완전히 없애서 제목과 바짝 붙입니다 */
+    color: #000000;
+    font-size: 14px;
+}
+
+.board {
+    margin-top: 10px;  /* ⬆️ 타이틀과의 간격을 16px에서 10px로 줄였습니다 */
+    width: 100%;
+    height: 25vh;      /* 📐 [핵심!] 보드 높이를 34vh에서 25vh로 확 줄여서 아래 입력창을 위로 끌어올립니다 */
+    border-radius: 24px;
+    border: 2px dashed #f0c9aa;
+    background: #faf7f3;
+    position: relative;
+    overflow: hidden;
 }
 
 .note{
