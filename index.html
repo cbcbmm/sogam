@@ -295,7 +295,7 @@ button{
         }
     }
 
-    // --- 노트 생성 함수 ---
+// --- 노트 생성 함수 (1분 뒤 부드럽게 사라지는 버전) ---
     function createNote(text){
         const note = document.createElement('div');
         const pos = randomPosition();
@@ -308,8 +308,22 @@ button{
         note.style.transform = `rotate(${(Math.random()*10)-5}deg)`;
         note.style.zIndex = Date.now();
 
+        // ✨ 부드러운 변화를 위해 CSS transition 효과를 미리 줍니다.
+        note.style.transition = "opacity 1s ease-out"; 
+
         board.appendChild(note);
+
+        // ⏱️ 1분(60,000ms)이 되기 1초 전(59,000ms)에 투명도를 0으로 만듭니다.
+        setTimeout(() => {
+            note.style.opacity = "0";
+        }, 59000);
+
+        // ⏱️ 정확히 1분(60,000ms)이 되었을 때 화면에서 완전히 제거합니다.
+        setTimeout(() => {
+            note.remove();
+        }, 60000); 
     }
+
 
     // 6. 실시간 데이터베이스 감지 코드
     const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
