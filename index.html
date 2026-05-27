@@ -205,33 +205,26 @@ button{
     <div class="board" id="board"></div>
 
     <div class="character">
-
         <img src="character.png">
-
         <div class="speech">
             행사 참여 소감과<br>
             국가보훈대상자에 대한<br>
             감사의 메시지를 남겨주세요!
         </div>
-
     </div>
 
     <div class="input-area">
-
         <input
             id="messageInput"
             maxlength="40"
             placeholder="따뜻한 메시지를 입력해주세요 :)"
         >
-
-        <button onclick="addMessage()">
+        <button id="submitBtn">
             등록하기
         </button>
-
     </div>
 
     <div class="warning" id="warning"></div>
-
 
 </div>
 
@@ -240,28 +233,28 @@ button{
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-    // 3. 파이어베이스 설정값 (현재 사용자님의 실제 설정값입니다)
+    // 3. [오타 수정됨] 파이어베이스 설정값
     const firebaseConfig = {
         apiKey: "AIzaSyB91aq4eu4EMXRDZP4XaxZYrIS2rC7VONU",
         authDomain: "sogam-f708f.firebaseapp.com",
         projectId: "sogam-f708f",
         storageBucket: "sogam-f708f.firebasestorage.app",
         messagingSenderId: "347505571080",
-        appId: "1:347505571080:web:9b28f6716ab322da2728bd"
-        measurementId: "G-XG2975QKHP
+        appId: "1:347505571080:web:9b28f6716ab322da2728bd", // 👈 쉼표 추가함
+        measurementId: "G-XG2975QKHP" // 👈 따옴표 닫음
     };
 
     // 4. 파이어베이스 및 데이터베이스(Firestore) 초기화
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 기존에 작성하신 변수들 ---
+    // --- 기존 변수들 ---
     const board = document.getElementById('board');
     const warning = document.getElementById('warning');
     const colors = ['#ffe5e5', '#fff1b8', '#dff7d8', '#dcefff', '#f1e2ff'];
     const bannedWords = ['시발','씨발','병신','새끼','좆','fuck','shit','bitch','ㅅㅂ'];
 
-    // --- 기존에 작성하신 유틸 함수들 ---
+    // --- 유틸 함수들 ---
     function containsBadWord(text){
         const lower = text.toLowerCase();
         return bannedWords.some(word => lower.includes(word));
@@ -274,7 +267,7 @@ button{
         };
     }
 
-    // 5. [수정됨] 파이어베이스에 데이터를 저장하는 addMessage 함수
+    // 5. 파이어베이스에 데이터를 저장하는 addMessage 함수
     async function addMessage(){
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
@@ -290,20 +283,19 @@ button{
             return;
         }
 
-        // 📝 기존의 createNote(text) 대신 파이어베이스 데이터베이스에 저장합니다.
         try {
             await addDoc(collection(db, "messages"), {
                 text: text,
-                createdAt: serverTimestamp() // 작성 시간 저장
+                createdAt: serverTimestamp()
             });
-            input.value = ''; // 성공하면 입력창 비우기
+            input.value = ''; 
         } catch (error) {
             console.error("데이터 저장 실패: ", error);
             warning.innerText = '메시지 저장 중 오류가 발생했습니다.';
         }
     }
 
-    // --- 기존에 작성하신 노트 생성 함수 ---
+    // --- 노트 생성 함수 ---
     function createNote(text){
         const note = document.createElement('div');
         const pos = randomPosition();
@@ -319,20 +311,21 @@ button{
         board.appendChild(note);
     }
 
-    // 6. [추가됨] 데이터베이스에서 실시간으로 글을 읽어와 화면에 뿌려주는 코드
-    // 누군가 글을 쓰면 새로고침 안 해도 화면에 바로 나타납니다!
+    // 6. 실시간 데이터베이스 감지 코드
     const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
     onSnapshot(q, (snapshot) => {
-        board.innerHTML = ''; // 중복으로 그려지는 것을 막기 위해 보드 청소
+        board.innerHTML = ''; 
         snapshot.forEach((doc) => {
             const data = doc.data();
-            createNote(data.text); // 데이터베이스에 있는 텍스트로 노트 생성
+            createNote(data.text); 
         });
     });
 
-    // --- 기존에 작성하신 엔터키 이벤트 리스너 ---
-    document.getElementById('messageInput')
-    .addEventListener('keypress', function(e){
+    // --- [추가] 등록하기 버튼 클릭 이벤트 리스너 ---
+    document.getElementById('submitBtn').addEventListener('click', addMessage);
+
+    // --- 엔터키 이벤트 리스너 ---
+    document.getElementById('messageInput').addEventListener('keypress', function(e){
         if(e.key === 'Enter'){
             addMessage();
         }
@@ -342,3 +335,4 @@ button{
 
 </body>
 </html>
+    
