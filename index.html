@@ -274,12 +274,20 @@ button{
     }
 
 function randomPosition(){
+        // 보드판의 실제 가로, 세로 크기를 계산합니다.
+        const boardWidth = board.clientWidth;
+        const boardHeight = board.clientHeight;
+
         return {
-            x: Math.random() * (board.clientWidth - 140), // 보드 가로 폭에 맞춰 랜덤 배치
-            y: Math.random() * 50  // 💡 세로 생성 위치를 위쪽(0~50px 사이)으로 제한하여 아래로 늘어날 공간을 확보합니다.
+            // 가로(x): 오른쪽으로 삐져나가지 않게 포스트잇 너비만큼 빼고 랜덤 배치
+            x: Math.random() * (boardWidth - 120), 
+            
+            // 세로(y): 💡 위쪽 10px부터 바닥 위 60px 사이 영역에 골고루 배치
+            y: 10 + (Math.random() * (boardHeight - 110)) 
         };
     }
 
+    
     // 5. 파이어베이스에 데이터를 저장하는 addMessage 함수
     async function addMessage(){
         const input = document.getElementById('messageInput');
